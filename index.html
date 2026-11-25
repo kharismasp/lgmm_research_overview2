@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="An interactive research presentation on conservative Lagrange–Galerkin moving-mesh finite-element methods."
+    />
+    <meta name="theme-color" content="#0a2735" />
+    <title>LGMM Research Presentation · Kharisma Surya</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles/research-p02.css" />
+    <link rel="stylesheet" href="styles/appendix.css" />
+    <link rel="stylesheet" href="styles/v13-integrations.css" />
+    <link rel="stylesheet" href="styles/presentation.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#question">Skip to presentation</a>
+
+    <header class="topbar" aria-label="Presentation controls">
+      <a class="brand" href="#question" aria-label="Return to opening">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="brand-copy">
+          <strong>LGMM</strong>
+          <small>K. Surya</small>
+        </span>
+      </a>
+
+      <nav class="chapter-nav" aria-label="Jump to a research section">
+        <a href="#question" data-nav-group="opening">Question</a>
+        <a href="#motivation" data-nav-group="motivation">Motivation</a>
+        <a href="#challenge" data-nav-group="challenge">Challenge</a>
+        <a href="#model" data-nav-group="formulation">Formulation</a>
+        <a href="#mesh-kinematics" data-nav-group="mesh">Moving mesh</a>
+        <a href="#results-map" data-nav-group="results">Theorems</a>
+        <a href="#multi-d-analysis" data-technical-group="analysis" data-technical-topic="error-equation" aria-haspopup="dialog" aria-controls="technical-analysis">Multi-D analysis</a>
+        <a href="#experiment" data-nav-group="numerics">Numerics</a>
+        <a href="#outlook" data-nav-group="outlook">Outlook</a>
+      </nav>
+
+      <span id="activeSceneLabel" class="active-scene-label" aria-hidden="true"></span>
+
+      <div class="top-actions">
+        <button class="utility-button" id="showSlideAll" type="button" title="Reveal all on this slide">Show all</button>
+        <button class="utility-button" id="overviewToggle" type="button" aria-label="Sections" aria-haspopup="dialog" aria-controls="overviewDialog">
+          <svg aria-hidden="true" viewBox="0 0 20 20">
+            <rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1"></rect>
+            <rect x="12" y="2.5" width="5.5" height="5.5" rx="1"></rect>
+            <rect x="2.5" y="12" width="5.5" height="5.5" rx="1"></rect>
+            <rect x="12" y="12" width="5.5" height="5.5" rx="1"></rect>
+          </svg>
+          <span>Sections</span>
+        </button>
+        <button class="utility-button" id="fullscreenToggle" type="button" aria-label="Present" aria-pressed="false">
+          <svg aria-hidden="true" viewBox="0 0 20 20">
+            <path d="M3 7V3h4M13 3h4v4M17 13v4h-4M7 17H3v-4"></path>
+          </svg>
+          <span>Present</span>
+        </button>
+      </div>
+      <div class="top-progress" aria-hidden="true"><span id="topProgressFill"></span></div>
+    </header>
+
+    <main class="presentation" id="presentation">
+      <section class="chapter opening tone-dark" id="question" data-nav="opening" data-title="Research question">
+        <div class="chapter-inner">
+          <div class="cover-layout">
+            <header class="opening-copy" data-slide-step="0">
+              <h1>A conservative Lagrange–Galerkin moving-mesh method</h1>
+              <p class="cover-author">Kharisma Surya Putri</p>
+              <p class="cover-keywords">PDE · numerical analysis · FEM · moving mesh</p>
+            </header>
+
+            <figure class="cover-peak" data-slide-step="0" aria-label="A moving concentration peak and its mesh">
+              <svg class="cover-profile-defs" width="0" height="0" aria-hidden="true">
+                <defs>
+                  <path id="coverNarrowPeak" d="M39 120C60 120 68 118 74 78C78 51 82 24 88 24C94 24 98 51 102 78C108 118 116 120 137 120"/>
+                </defs>
+              </svg>
+              <div class="cover-plot-key" aria-hidden="true">
+                <span>Concentration</span><span>Mesh points</span>
+              </div>
+              <div class="cover-peak-states">
+                <div class="cover-peak-state">
+                  <p>Initial</p>
+                  <svg viewBox="0 10 256 155" role="img" aria-label="A narrow concentration peak on the left. The mesh has 11 points, clustered below and around the peak.">
+                    <path class="cover-profile-axis" d="M16 120H240 M16 150H240"/>
+                    <use class="cover-profile" href="#coverNarrowPeak"/>
+                    <g class="cover-nodes">
+                      <circle cx="16" cy="150" r="3.7"/>
+                      <circle cx="39" cy="150" r="3.7"/>
+                      <circle cx="62" cy="150" r="3.7"/>
+                      <circle cx="73" cy="150" r="3.7"/>
+                      <circle cx="83" cy="150" r="3.7"/>
+                      <circle cx="93" cy="150" r="3.7"/>
+                      <circle cx="103" cy="150" r="3.7"/>
+                      <circle cx="114" cy="150" r="3.7"/>
+                      <circle cx="145" cy="150" r="3.7"/>
+                      <circle cx="187" cy="150" r="3.7"/>
+                      <circle cx="240" cy="150" r="3.7"/>
+                    </g>
+                  </svg>
+                </div>
+                <svg class="cover-peak-arrow" viewBox="0 0 28 24" aria-hidden="true">
+                  <path d="M3 12h21m-7-6 7 6-7 6"/>
+                </svg>
+                <div class="cover-peak-state">
+                  <p>Later</p>
+                  <svg viewBox="0 10 256 155" role="img" aria-label="The same peak has moved to the right. The same 11 mesh points are redistributed to cluster around its new position. The endpoints stay fixed.">
+                    <path class="cover-profile-axis" d="M16 120H240 M16 150H240"/>
+                    <use class="cover-profile" href="#coverNarrowPeak" transform="translate(80 0)"/>
+                    <g class="cover-nodes">
+                      <circle cx="16" cy="150" r="3.7"/>
+                      <circle cx="69" cy="150" r="3.7"/>
+                      <circle cx="111" cy="150" r="3.7"/>
+                      <circle cx="142" cy="150" r="3.7"/>
+                      <circle cx="153" cy="150" r="3.7"/>
+                      <circle cx="163" cy="150" r="3.7"/>
+                      <circle cx="173" cy="150" r="3.7"/>
+                      <circle cx="183" cy="150" r="3.7"/>
+                      <circle cx="194" cy="150" r="3.7"/>
+                      <circle cx="217" cy="150" r="3.7"/>
+                      <circle cx="240" cy="150" r="3.7"/>
+                    </g>
+                  </svg>
+                </div>
+              </div>
+            </figure>
+
+            <p data-slide-step="1" class="research-question">
+              Can we follow the peak, <strong>conserve mass</strong>, and <strong>prove how accurate the calculation is</strong>?
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter" id="motivation" data-nav="motivation" data-title="Motivation">
+        <div class="chapter-inner">
+          <header data-slide-step="0" class="chapter-heading">
+            <div>
+              <p class="chapter-index">02 · Motivation</p>
+              <h2>Moving localization</h2>
+            </div>
+            <p class="chapter-statement">A coupled application leads to a transport problem with moving localization.</p>
+            <p class="chapter-lead">
+              The uPA cancer-invasion system is the application horizon. The present analysis
+              isolates the conservative convection–diffusion mechanism that its cell-density
+              equation contains.
+            </p>
+          </header>
+
+          <div class="motivation-layout">
+            <figure data-slide-step="0" class="simulation-feature">
+              <div class="media-topline">
+                <span>Numerical solution fields</span>
+                <div class="view-switch" aria-label="Select simulation view">
+                  <button type="button" class="active" data-bio-view="fields" aria-pressed="true">Fields</button>
+                  <button type="button" data-bio-view="mesh" aria-pressed="false">Fields + mesh</button>
+                </div>
+              </div>
+              <video
+                id="bioVideo"
+                muted
+                loop
+                autoplay
+                playsinline
+                preload="metadata"
+                poster="assets/urokinase-fields-poster.jpg"
+                aria-label="Computed evolution of cell density, extracellular matrix, uPA, PAI-1, and plasmin"
+              >
+                <source src="assets/urokinase-fields.mp4" type="video/mp4" />
+              </video>
+              <figcaption>
+                <strong>The evolving computation is the main observation.</strong>
+                Localized structures form and change position; resolution must respond in time.
+              </figcaption>
+            </figure>
+
+            <aside class="motivation-context">
+              <figure data-slide-step="1" class="experiment-strip">
+                <img
+                  src="assets/invasion-timeline.png"
+                  alt="Experimental sequence labelled D3, D6, D9, D12, and D14 showing progressive invasion"
+                />
+                <figcaption>Experimental motivation · D3–D14</figcaption>
+              </figure>
+
+              <div data-slide-step="2" class="core-reduction">
+                <span class="section-kicker">Current mathematical focus</span>
+                <div class="display-equation compact-equation" aria-label="Scalar convection diffusion equation">
+                  ∂<sub>t</sub>φ + ∇·(<b>u</b>φ) − νΔφ = 0
+                </div>
+                <p>
+                  The scalar problem retains the interaction among conservative transport,
+                  diffusion, and moving spatial resolution.
+                </p>
+              </div>
+            </aside>
+          </div>
+
+          <details data-slide-step="1" class="math-detail lg-derivation-detail">
+            <summary><span><b>Derivation from the characteristic ODE</b> · BDF1 and BDF2 along X</span><span class="detail-action"><i>Show</i><i>Hide</i></span></summary>
+            <div class="detail-content lg-derivation-content">
+              <div class="characteristic-ode-line">
+                <span class="small-label">Backward characteristic through (x,t<sup>n</sup>)</span>
+                <div class="math-display formula-medium">
+                  <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow>
+                    <mfrac><mrow><mi>d</mi><mi>𝐗</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mo>=</mo><mi>𝐮</mi><mrow><mo>(</mo><mi>𝐗</mi><mo>,</mo><mi>t</mi><mo>)</mo></mrow><mo>,</mo>
+                    <mspace width="1em"/><mi>t</mi><mo>∈</mo><mrow><mo>(</mo><mn>0</mn><mo>,</mo><mi>T</mi><mo>)</mo></mrow><mo>,</mo>
+                    <mspace width="1em"/><mi>𝐗</mi><mrow><mo>(</mo><msup><mi>t</mi><mi>n</mi></msup><mo>)</mo></mrow><mo>=</mo><mi>𝐱</mi><mo>.</mo>
+                  </mrow><annotation encoding="application/x-tex">\frac{d\mathbf X}{dt}=\mathbf u(\mathbf X,t),\qquad \mathbf X(t^n)=\mathbf x.</annotation></semantics></math>
+                </div>
+                <p>Along this curve, the advective derivative becomes an ordinary time derivative of the composition.</p>
+              </div>
+
+              <div class="lg-derivation-grid">
+                <article>
+                  <header><span>One step</span><strong>BDF1 · first order</strong></header>
+                  <div class="math-display formula-compact">
+                    <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow>
+                      <mrow><mo>[</mo><mfrac><mrow><mi>∂</mi><mi>ϕ</mi></mrow><mrow><mi>∂</mi><mi>t</mi></mrow></mfrac><mo>+</mo><mi>𝐮</mi><mo>⋅</mo><mi>∇</mi><mi>ϕ</mi><mo>]</mo></mrow><mrow><mo>(</mo><mi>𝐱</mi><mo>,</mo><msup><mi>t</mi><mi>n</mi></msup><mo>)</mo></mrow>
+                      <mo>=</mo><mfrac><mrow><mi>d</mi></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mi>ϕ</mi><mrow><mo>(</mo><mi>𝐗</mi><mrow><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>,</mo><mi>t</mi><mo>)</mo></mrow><msub><mo>|</mo><mrow><mi>t</mi><mo>=</mo><msup><mi>t</mi><mi>n</mi></msup></mrow></msub><mo>.</mo>
+                    </mrow></semantics></math>
+                  </div>
+                  <div class="math-display formula-compact derivation-result">
+                    <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow>
+                      <mo>=</mo><mfrac><mrow><msup><mi>ϕ</mi><mi>n</mi></msup><mrow><mo>(</mo><mi>𝐱</mi><mo>)</mo></mrow><mo>−</mo><msup><mi>ϕ</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>∘</mo><msubsup><mi>X</mi><mn>1</mn><mi>n</mi></msubsup><mrow><mo>(</mo><mi>𝐱</mi><mo>)</mo></mrow></mrow><mrow><mi>Δ</mi><mi>t</mi></mrow></mfrac><mo>+</mo><mi>O</mi><mrow><mo>(</mo><mi>Δ</mi><mi>t</mi><mo>)</mo></mrow><mo>.</mo>
+                    </mrow></semantics></math>
+                  </div>
+                </article>
+
+                <article>
+                  <header><span>Two steps</span><strong>BDF2 · second order</strong></header>
+                  <div class="math-display formula-compact">
+                    <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow>
+                      <mrow><mo>[</mo><mfrac><mrow><mi>∂</mi><mi>ϕ</mi></mrow><mrow><mi>∂</mi><mi>t</mi></mrow></mfrac><mo>+</mo><mi>𝐮</mi><mo>⋅</mo><mi>∇</mi><mi>ϕ</mi><mo>]</mo></mrow><mrow><mo>(</mo><mi>𝐱</mi><mo>,</mo><msup><mi>t</mi><mi>n</mi></msup><mo>)</mo></mrow>
+                      <mo>=</mo><mfrac><mrow><mn>3</mn><msup><mi>ϕ</mi><mi>n</mi></msup><mrow><mo>(</mo><mi>𝐱</mi><mo>)</mo></mrow><mo>−</mo><mn>4</mn><msup><mi>ϕ</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>∘</mo><msubsup><mi>X</mi><mn>1</mn><mi>n</mi></msubsup><mrow><mo>(</mo><mi>𝐱</mi><mo>)</mo></mrow><mo>+</mo><msup><mi>ϕ</mi><mrow><mi>n</mi><mo>−</mo><mn>2</mn></mrow></msup><mo>∘</mo><msubsup><mover accent="true"><mi>X</mi><mo>~</mo></mover><mn>1</mn><mi>n</mi></msubsup><mrow><mo>(</mo><mi>𝐱</mi><mo>)</mo></mrow></mrow><mrow><mn>2</mn><mi>Δ</mi><mi>t</mi></mrow></mfrac><mo>+</mo><mi>O</mi><mrow><mo>(</mo><msup><mrow><mi>Δ</mi><mi>t</mi></mrow><mn>2</mn></msup><mo>)</mo></mrow><mo>.</mo>
+                    </mrow><annotation encoding="application/x-tex">\frac{3\phi^n-4\phi^{n-1}\circ X_1^n+\phi^{n-2}\circ\widetilde X_1^n}{2\Delta t}+O(\Delta t^2).</annotation></semantics></math>
+                  </div>
+                </article>
+              </div>
+
+              <div class="lg-map-definitions">
+                <div class="formula-display formula-compact">
+                  <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow>
+                    <msubsup><mi>X</mi><mn>1</mn><mi>n</mi></msubsup><mrow><mo>(</mo><mi>𝐱</mi><mo>)</mo></mrow><mo>:=</mo><mi>𝐱</mi><mo>−</mo><msup><mi>𝐮</mi><mi>n</mi></msup><mrow><mo>(</mo><mi>𝐱</mi><mo>)</mo></mrow><mi>Δ</mi><mi>t</mi><mo>≈</mo><mi>𝐗</mi><mrow><mo>(</mo><msup><mi>t</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>)</mo></mrow><mo>,</mo>
+                    <mspace width="1.2em"/><msubsup><mover accent="true"><mi>X</mi><mo>~</mo></mover><mn>1</mn><mi>n</mi></msubsup><mrow><mo>(</mo><mi>𝐱</mi><mo>)</mo></mrow><mo>:=</mo><mi>𝐱</mi><mo>−</mo><mn>2</mn><msup><mi>𝐮</mi><mi>n</mi></msup><mrow><mo>(</mo><mi>𝐱</mi><mo>)</mo></mrow><mi>Δ</mi><mi>t</mi><mo>≈</mo><mi>𝐗</mi><mrow><mo>(</mo><msup><mi>t</mi><mrow><mi>n</mi><mo>−</mo><mn>2</mn></mrow></msup><mo>)</mo></mrow><mo>.</mo>
+                  </mrow><annotation encoding="application/x-tex">X_1^n(x)=x-u^n(x)\Delta t,\qquad \widetilde X_1^n(x)=x-2u^n(x)\Delta t.</annotation></semantics></math>
+                </div>
+                <p><strong>Composition:</strong> (v∘X<sub>1</sub><sup>n</sup>)(x)=v(X<sub>1</sub><sup>n</sup>(x)). The tilde remains attached to the entire two-step map <span class="math-inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><mrow><msubsup><mover accent="true"><mi>X</mi><mo>~</mo></mover><mn>1</mn><mi>n</mi></msubsup></mrow></math></span>.</p>
+              </div>
+              <p class="formal-note">This characteristic calculation explains the pullback locations. For the conservative density equation, the change of variables also contributes the Jacobians γ<sup>n</sup> and <span class="math-inline"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><mrow><msup><mover accent="true"><mi>γ</mi><mo>~</mo></mover><mi>n</mi></msup></mrow></math></span>, which appear in the mass-preserving operators above.</p>
+              <p class="source-note large-source">BDF1 characteristic approximation: Pironneau (1982), Süli (1988). BDF2 characteristic approximation: Boukir et al. (1997), Notsu &amp; Tabata (2016a, 2016b).</p>
+            </div>
+          </details>
+
+          <details data-slide-step="2" class="math-detail">
+            <summary>
+              <span><b>Future application model</b> · inspect the reduced and full uPA systems</span>
+              <span class="detail-action"><i>Show</i><i>Hide</i></span>
+            </summary>
+            <div class="detail-content model-images">
+              <figure>
+                <img src="assets/upa-model-simplified.png" alt="Reduced three-equation uPA model with biological mechanisms annotated" />
+                <figcaption>Mechanism-level reduction</figcaption>
+              </figure>
+              <figure>
+                <img src="assets/upa-model-full.png" alt="Full five-equation uPA model with transport and reaction terms annotated" />
+                <figcaption>Full coupled system · future application target</figcaption>
+              </figure>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="chapter tone-soft" id="challenge" data-nav="challenge" data-title="Numerical challenge">
+        <div class="chapter-inner">
+          <header data-slide-step="0" class="chapter-heading">
+            <div>
+              <p class="chapter-index">03 · Numerical challenge</p>
+              <h2>Two bottlenecks, two mechanisms</h2>
+            </div>
+            <p class="chapter-statement">Characteristic transport controls how information is advanced; mesh motion controls where the spatial degrees of freedom are placed.</p>
+          </header>
+
+          <div data-slide-step="0" class="challenge-thesis challenge-thesis-compact">
+            <div>
+              <span>Why both are needed</span>
+              <strong>A robust transport step is necessary—but it does not create spatial resolution.</strong>
+            </div>
+            <p>When ν is small, the PDE transports a narrow layer over long distances. Even a stable time update can remain inaccurate if a fixed grid has only a few nodes across that layer. LGMM therefore separates the problem into two jobs.</p>
+          </div>
+
+          <div data-slide-step="1" class="challenge-stage-switch" role="tablist" aria-label="Choose one numerical bottleneck to explain">
+            <button class="active" type="button" role="tab" aria-selected="true" aria-controls="challengeTransport" data-challenge-view="transport">
+              <span>01 · Transport</span><strong>How information moves</strong>
+            </button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="challengeResolution" data-challenge-view="resolution">
+              <span>02 · Resolution</span><strong>Where nodes are placed</strong>
+            </button>
+          </div>
+
+          <div data-slide-step="1" class="challenge-task-grid challenge-v6 challenge-stage-deck">
+            <article class="challenge-task transport-task active" id="challengeTransport" role="tabpanel" data-challenge-panel="transport">
+              <div class="stage-head"><span>01</span><h3>Transport bottleneck</h3></div>
+              <p class="task-question">When Pe<sub>K</sub>≫1, how can we advance the conservative transport term without directly approximating a dominant Eulerian convection operator?</p>
+              <div class="argument-callout">
+                <span>Convection-dominated regime</span>
+                <strong>Pe<sub>K</sub> = ‖u‖<sub>∞,K</sub> h<sub>K</sub> /(2ν) ≫ 1</strong>
+                <small>the convective scale dominates the diffusive scale on element K</small>
+              </div>
+              <div class="bottleneck-mechanism" aria-label="Transport mechanism">
+                <div><span>Departure point</span><strong>X<sub>1</sub><sup>n</sup>(x)</strong></div>
+                <i>+</i>
+                <div><span>Compression</span><strong>γ<sup>n</sup>(x)</strong></div>
+                <i>→</i>
+                <div class="mechanism-result"><span>Conservative pullback</span><strong>(φ<sup>n−1</sup>∘X<sub>1</sub><sup>n</sup>)γ<sup>n</sup></strong></div>
+              </div>
+              <div class="method-answer">
+                <span>Why LG works</span>
+                <strong>compare the density along its physical trajectory</strong>
+                <p><button class="term-link" type="button" data-term="characteristic-map">X<sub>1</sub><sup>n</sup></button> answers “where did the arriving density come from?”, while <button class="term-link" type="button" data-term="jacobian">γ<sup>n</sup></button> accounts for local compression and expansion. The dominant advective motion is handled by backtracking rather than by a direct Eulerian convection term.</p>
+              </div>
+            </article>
+
+            <article class="challenge-task resolution-task" id="challengeResolution" role="tabpanel" data-challenge-panel="resolution" hidden>
+              <div class="stage-head"><span>02</span><h3>Resolution bottleneck</h3></div>
+              <p class="task-question">As a moving profile sharpens, can a fixed set of uniformly placed P1 nodes still represent it without local over- and undershoots?</p>
+              <div class="resolution-evidence" aria-label="Computed fixed-grid oscillation compared with the expected sharp aggregate">
+                <figure class="computed-profile-panel">
+                  <header class="evidence-panel-head">
+                    <div><span>Computed solution</span><strong>Fixed LG · uniform mesh</strong></div>
+                    <span class="evidence-status evidence-status-problem">under-resolved</span>
+                  </header>
+                  <div class="fixed-animation-window" aria-label="Zoomed crop of the supplied fixed-mesh numerical animation">
+                    <img src="assets/fixed-mesh-oscillation.gif" alt="Animated fixed-mesh numerical profile developing two sharp peaks and visible oscillations" />
+                  </div>
+                  <figcaption><strong>Observed numerical response.</strong> The mesh size stays uniform while narrow peaks form; the unresolved profile is accompanied by oscillations across the domain.</figcaption>
+                </figure>
+
+                <div class="expected-profile-panel">
+                  <input class="expected-mode-input" id="expectedUniform" name="expectedMeshMode" type="radio" checked />
+                  <input class="expected-mode-input" id="expectedFocused" name="expectedMeshMode" type="radio" />
+                  <header class="evidence-panel-head">
+                    <div><span>Expected solution</span><strong>Sharp aggregate · schematic reference</strong></div>
+                    <span class="evidence-status evidence-status-reference">physical profile</span>
+                  </header>
+                  <div class="expected-mode-switch" aria-label="Compare uniform and peak-focused node placement">
+                    <label for="expectedUniform">Uniform nodes</label>
+                    <label for="expectedFocused">Concentrate near peaks</label>
+                  </div>
+                  <figure class="expected-profile-figure">
+                    <svg viewBox="0 0 540 245" role="img" aria-label="Expected smooth sharp twin-peak solution with a toggle between uniform and peak-focused finite-element nodes">
+                      <defs>
+                        <linearGradient id="expectedProfileFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0" stop-color="#168c87" stop-opacity=".22" />
+                          <stop offset="1" stop-color="#168c87" stop-opacity=".02" />
+                        </linearGradient>
+                      </defs>
+                      <rect x="42" y="20" width="468" height="175" rx="7" class="expected-plot-bg" />
+                      <line x1="42" y1="180" x2="510" y2="180" class="expected-axis" />
+                      <line x1="42" y1="20" x2="42" y2="180" class="expected-axis" />
+                      <path class="expected-profile-area" d="M42 180 C92 180 126 178 151 170 C169 162 176 132 183 78 C187 47 191 29 195 23 C200 36 203 69 208 98 C214 139 224 163 244 171 C271 179 294 177 316 170 C337 161 343 132 349 83 C354 48 358 28 363 23 C368 38 372 75 378 106 C384 143 394 164 414 172 C441 179 476 180 510 180 L510 180 L42 180 Z" />
+                      <path class="expected-profile-line" d="M42 180 C92 180 126 178 151 170 C169 162 176 132 183 78 C187 47 191 29 195 23 C200 36 203 69 208 98 C214 139 224 163 244 171 C271 179 294 177 316 170 C337 161 343 132 349 83 C354 48 358 28 363 23 C368 38 372 75 378 106 C384 143 394 164 414 172 C441 179 476 180 510 180" />
+                      <g class="uniform-mode-art">
+                        <path class="p1-line uniform-line" d="M42 180 L100 180 L158 166 L217 151 L276 177 L334 158 L393 149 L451 178 L510 180" />
+                        <g class="node-row uniform-node-set">
+                          <circle cx="42" cy="204" r="4"/><circle cx="100" cy="204" r="4"/><circle cx="158" cy="204" r="4"/><circle cx="217" cy="204" r="4"/><circle cx="276" cy="204" r="4"/><circle cx="334" cy="204" r="4"/><circle cx="393" cy="204" r="4"/><circle cx="451" cy="204" r="4"/><circle cx="510" cy="204" r="4"/>
+                        </g>
+                        <text x="276" y="233" text-anchor="middle" class="node-mode-note uniform-note">few nodes across each narrow layer</text>
+                      </g>
+                      <g class="focused-mode-art">
+                        <path class="p1-line focused-line" d="M42 180 L100 180 L145 172 L166 161 L179 110 L187 47 L195 23 L202 57 L211 119 L228 165 L276 177 L319 169 L338 157 L348 91 L356 41 L363 23 L370 63 L381 123 L400 166 L448 178 L510 180" />
+                        <g class="node-row focused-node-set">
+                          <circle cx="42" cy="204" r="4"/><circle cx="100" cy="204" r="4"/><circle cx="145" cy="204" r="4"/><circle cx="166" cy="204" r="4"/><circle cx="179" cy="204" r="4"/><circle cx="187" cy="204" r="4"/><circle cx="195" cy="204" r="4"/><circle cx="202" cy="204" r="4"/><circle cx="211" cy="204" r="4"/><circle cx="228" cy="204" r="4"/><circle cx="276" cy="204" r="4"/><circle cx="319" cy="204" r="4"/><circle cx="338" cy="204" r="4"/><circle cx="348" cy="204" r="4"/><circle cx="356" cy="204" r="4"/><circle cx="363" cy="204" r="4"/><circle cx="370" cy="204" r="4"/><circle cx="381" cy="204" r="4"/><circle cx="400" cy="204" r="4"/><circle cx="448" cy="204" r="4"/><circle cx="510" cy="204" r="4"/>
+                        </g>
+                        <path d="M179 216 V223 H211 V216" class="hk-bracket" />
+                        <text x="195" y="237" text-anchor="middle" class="hk-label">smaller h<tspan baseline-shift="sub" font-size="11">K</tspan></text>
+                        <text x="394" y="233" text-anchor="middle" class="node-mode-note focused-note">same total degrees of freedom, relocated</text>
+                      </g>
+                      <text x="19" y="35" class="expected-axis-label">φ</text>
+                      <text x="500" y="198" class="expected-axis-label">x</text>
+                    </svg>
+                    <figcaption><span><i class="reference-swatch"></i>expected sharp profile</span><span><i class="p1-swatch"></i>P1 representation</span></figcaption>
+                  </figure>
+                  <p class="expected-profile-note"><strong>Interpretation:</strong> the sharp peaks are the expected aggregate; the ripples in the computed panel are numerical artifacts. Moving nodes lowers the local approximation scale around each peak.</p>
+                </div>
+              </div>
+
+              <div class="resolution-logic-strip" aria-label="Why local refinement is necessary">
+                <div><span>Fixed uniform mesh</span><button class="term-link logic-term" type="button" data-term="under-resolution">layer width ≪ local h<sub>K</sub></button></div>
+                <i>→</i>
+                <div class="logic-warning"><span>Representation failure</span><strong>sharp peak + spurious oscillation</strong></div>
+                <i>→</i>
+                <div class="logic-answer"><span>Move the resolution</span><button class="term-link logic-term" type="button" data-term="moving-resolution">h<sub>K</sub>(t) ↓ near the peaks</button></div>
+              </div>
+              <div class="method-answer">
+                <span>Why mesh motion works</span>
+                <strong>reduce the local mesh size where the profile is difficult</strong>
+                <div class="challenge-equation">h<sub>K</sub>(t) ↓ near steep P1-gradient jumps</div>
+                <p>The coordinates P<sub>i</sub>(t) move and the space Ψ<sub>h</sub>(t) changes with them. The same number of degrees of freedom is redistributed toward the moving structure, so the local approximation scale becomes finer where the profile has large variation.</p>
+              </div>
+            </article>
+          </div>
+
+          <div data-slide-step="2" class="design-roadmap clearer-roadmap" aria-label="LGMM design roadmap">
+            <div><span>physical transport</span><strong>LG moves information</strong><small>backtrack with X<sub>1</sub><sup>n</sup> and γ<sup>n</sup></small></div>
+            <i>+</i>
+            <div><span>spatial resolution</span><strong>moving mesh moves nodes</strong><small>coordinates P<sub>i</sub>(t)</small></div>
+            <i>→</i>
+            <div class="design-result"><span>combined method</span><strong>LGMM</strong><small>robust transport + moving resolution</small></div>
+          </div>
+
+          <div data-slide-step="2" class="roadmap-conclusion clearer-conclusion">
+            <span>Key distinction</span>
+            <p><strong>The mechanisms are complementary, not interchangeable.</strong> LG determines how physical density is transported between time levels; the moving mesh determines where the finite-element space can represent that density accurately. The central analytical question is whether their combination retains geometry, mass, stability, and optimal accuracy.</p>
+          </div>
+
+          <details data-slide-step="2" class="math-detail">
+            <summary>
+              <span><b>Alternative numerical strategies</b> · context for the design choice</span>
+              <span class="detail-action"><i>Show</i><i>Hide</i></span>
+            </summary>
+            <div class="detail-content prose-detail">
+              <p>Adaptive refinement, stabilized Galerkin methods, discontinuous Galerkin methods, and high-resolution finite-volume methods are valid alternatives. LGMM asks a specific question: can the existing P1 degrees of freedom be relocated with the transported structure while retaining the conservative Lagrange–Galerkin framework and a sharp error estimate?</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="chapter" id="model" data-nav="formulation" data-title="Conservative model">
+        <div class="chapter-inner">
+          <header data-slide-step="0" class="chapter-heading compact-heading">
+            <div>
+              <p class="chapter-index">04 · Mathematical formulation</p>
+              <h2>Conservative model</h2>
+            </div>
+            <p class="chapter-statement">We study a conservative convection–diffusion problem that isolates the transport–diffusion mechanism behind the moving-resolution question.</p>
+          </header>
+
+          <article data-slide-step="0" class="formal-panel readable-formal wide-formal model-strong-form">
+            <div class="formal-label">Strong formulation · initial–boundary value problem</div>
+            <p>Find φ : Ω × (0,T) → ℝ such that</p>
+            <div class="math-display model-system-math">
+              <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable columnalign="right center left" rowspacing="0.72em">
+                <mtr>
+                  <mtd><mfrac><mrow><mi>∂</mi><mi>ϕ</mi></mrow><mrow><mi>∂</mi><mi>t</mi></mrow></mfrac><mo>+</mo><mi>∇</mi><mo>⋅</mo><mrow><mo>(</mo><mi>𝐮</mi><mi>ϕ</mi><mo>)</mo></mrow><mo>−</mo><mi>ν</mi><mi>Δ</mi><mi>ϕ</mi><mo>=</mo><mn>0</mn></mtd>
+                  <mtd><mspace width="1.2em"/><mtext>in</mtext><mspace width=".6em"/></mtd>
+                  <mtd><mi>Ω</mi><mo>×</mo><mrow><mo>(</mo><mn>0</mn><mo>,</mo><mi>T</mi><mo>)</mo></mrow><mo>,</mo></mtd>
+                </mtr>
+                <mtr>
+                  <mtd><mi>ν</mi><mfrac><mrow><mi>∂</mi><mi>ϕ</mi></mrow><mrow><mi>∂</mi><mi>n</mi></mrow></mfrac><mo>−</mo><mi>ϕ</mi><mi>𝐮</mi><mo>⋅</mo><mi>𝐧</mi><mo>=</mo><mn>0</mn></mtd>
+                  <mtd><mspace width="1.2em"/><mtext>on</mtext><mspace width=".6em"/></mtd>
+                  <mtd><mi>Γ</mi><mo>×</mo><mrow><mo>(</mo><mn>0</mn><mo>,</mo><mi>T</mi><mo>)</mo></mrow><mo>,</mo></mtd>
+                </mtr>
+                <mtr>
+                  <mtd><mi>ϕ</mi><mo>=</mo><msup><mi>ϕ</mi><mn>0</mn></msup></mtd>
+                  <mtd><mspace width="1.2em"/><mtext>in</mtext><mspace width=".6em"/></mtd>
+                  <mtd><mi>Ω</mi><mo>,</mo><mspace width=".6em"/><mtext>at</mtext><mspace width=".45em"/><mi>t</mi><mo>=</mo><mn>0</mn><mo>.</mo></mtd>
+                </mtr>
+              </mtable><annotation encoding="application/x-tex">\partial_t\phi+\nabla\!\cdot(\mathbf u\phi)-\nu\Delta\phi=0,\quad \nu\partial_n\phi-\phi\mathbf u\!\cdot\mathbf n=0,\quad \phi|_{t=0}=\phi^0.</annotation></semantics></math>
+            </div>
+          </article>
+
+          <div data-slide-step="1" class="focus-layout">
+            <article class="formal-panel primary-formal readable-formal">
+              <div class="formal-label">Weak form</div>
+              <p>Find φ(t) such that, for every test function ψ ∈ Ψ,</p>
+              <div class="math-display"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>∂</mi><mi>t</mi></msub><mi>ϕ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mi>ψ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>∇</mi><mspace width="-0.167em"></mspace><mo>⋅</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐮</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>ϕ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mi>ψ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mi>ν</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>∇</mi><mi>ϕ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mi>∇</mi><mi>ψ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2.0em"></mspace><mo>∀</mo><mi>ψ</mi><mo>∈</mo><mi>Ψ</mi><mi>.</mi></mrow></semantics></math></div>
+              <div class="concept-row">
+                <span><b>transport</b> conservative divergence form</span>
+                <span><b>diffusion</b> ν &gt; 0</span>
+                <span><b>unknown</b> density φ</span>
+              </div>
+            </article>
+            <aside class="narrative-panel">
+              <span class="section-kicker">Why this abstraction?</span>
+              <p>The biological models motivate moving, localized structure. The analysis starts with the scalar conservative transport–diffusion mechanism before returning to richer coupled systems.</p>
+              <button class="term-link" type="button" data-term="conservative-form">conservative form</button>
+              <button class="term-link" type="button" data-term="physical-velocity">physical velocity u</button>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="chapter tone-soft" id="conservative-lg" data-nav="formulation" data-title="Mass-preserving LG">
+        <div class="chapter-inner">
+          <header data-slide-step="0" class="chapter-heading compact-heading">
+            <div><p class="chapter-index">05 · LG scheme</p><h2>Mass-preserving LG</h2></div>
+            <p class="chapter-statement">The conservative LG step backtracks density along characteristics and multiplies by the corresponding Jacobian.</p>
+          </header>
+
+          <div class="lg-clean-grid">
+            <article data-slide-step="0" class="formal-panel readable-formal">
+              <div class="formal-label">Upwind mappings along characteristics</div>
+              <div class="math-display compact-math"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>X</mi><mn>1</mn><mi>n</mi></msubsup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>:=</mo><msub><mi>X</mi><mn>1</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>𝐮</mi><mi>n</mi></msup><mo>,</mo><mi>Δ</mi><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>x</mi><mo>−</mo><mi>Δ</mi><mi>t</mi><mspace width="0.167em"></mspace><msup><mi>𝐮</mi><mi>n</mi></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><msup><mi>γ</mi><mi>n</mi></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>:=</mo><mo>det</mo><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mi>∂</mi><msubsup><mi>X</mi><mn>1</mn><mi>n</mi></msubsup></mrow><mrow><mi>∂</mi><mi>x</mi></mrow></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow></semantics></math></div>
+              <div class="math-display compact-math"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mover accent="true"><mi>X</mi><mo>~</mo></mover><mn>1</mn><mi>n</mi></msubsup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>:=</mo><msub><mi>X</mi><mn>1</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>𝐮</mi><mi>n</mi></msup><mo>,</mo><mn>2</mn><mi>Δ</mi><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>x</mi><mo>−</mo><mn>2</mn><mi>Δ</mi><mi>t</mi><mspace width="0.167em"></mspace><msup><mi>𝐮</mi><mi>n</mi></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><msup><mover accent="true"><mi>γ</mi><mo>~</mo></mover><mi>n</mi></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>:=</mo><mo>det</mo><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mi>∂</mi><msubsup><mover accent="true"><mi>X</mi><mo>~</mo></mover><mn>1</mn><mi>n</mi></msubsup></mrow><mrow><mi>∂</mi><mi>x</mi></mrow></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mi>.</mi></mrow></semantics></math></div>
+              <div class="term-strip">
+                <button class="term-link" type="button" data-term="characteristic-map">X₁ⁿ · departure map</button>
+                <button class="term-link" type="button" data-term="jacobian">γⁿ · Jacobian</button>
+              </div>
+              <button type="button" class="lg-characteristic-cue" id="lgCharacteristicOpen" aria-haspopup="dialog" aria-controls="lgCharacteristicDialog">
+                <strong>Characteristic idea</strong><span>How LG traces transport backward</span>
+              </button>
+            </article>
+            <article data-slide-step="1" class="formal-panel readable-formal">
+              <div class="formal-label">Mass-preserving second-order LG scheme</div>
+              <p>For given φ<sub>h</sub>⁰ ∈ Ψ<sub>h</sub>, find {φ<sub>h</sub>ⁿ ∈ Ψ<sub>h</sub>ⁿ; n = 1,…,N<sub>T</sub>} such that, for n = 1,…,N<sub>T</sub>,</p>
+              <div class="math-display"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>𝒜</mi><mrow><mi>Δ</mi><mi>t</mi></mrow></msub><msubsup><mi>ϕ</mi><mi>h</mi><mi>n</mi></msubsup><mo>,</mo><msub><mi>ψ</mi><mi>h</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mi>ν</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>∇</mi><msubsup><mi>ϕ</mi><mi>h</mi><mi>n</mi></msubsup><mo>,</mo><mi>∇</mi><msubsup><mi>ψ</mi><mi>h</mi><mi>n</mi></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="2.0em"></mspace><mo>∀</mo><msub><mi>ψ</mi><mi>h</mi></msub><mo>∈</mo><msubsup><mi>Ψ</mi><mi>h</mi><mi>n</mi></msubsup><mi>.</mi></mrow></semantics></math></div>
+            </article>
+          </div>
+
+          <details data-slide-step="1" class="math-detail">
+            <summary><span><b>LG1 / LG2 time operators</b> · conservative difference operators</span><span class="detail-action"><i>Show</i><i>Hide</i></span></summary>
+            <div class="detail-content equation-stack">
+              <div class="math-display medium-math"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>𝒜</mi><mrow><mi>Δ</mi><mi>t</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></msubsup><msup><mi>ρ</mi><mi>n</mi></msup><mo>:=</mo><mfrac><mn>1</mn><mrow><mi>Δ</mi><mi>t</mi></mrow></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>ρ</mi><mi>n</mi></msup><mo>−</mo><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>ρ</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>∘</mo><msubsup><mi>X</mi><mn>1</mn><mi>n</mi></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><msup><mi>γ</mi><mi>n</mi></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>n</mi><mo>=</mo><mn>1</mn><mi>.</mi></mrow></semantics></math></div>
+              <div class="math-display medium-math"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>𝒜</mi><mrow><mi>Δ</mi><mi>t</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>2</mn><mo stretchy="true" form="postfix">)</mo></mrow></msubsup><msup><mi>ρ</mi><mi>n</mi></msup><mo>:=</mo><mfrac><mn>1</mn><mrow><mn>2</mn><mi>Δ</mi><mi>t</mi></mrow></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mn>3</mn><msup><mi>ρ</mi><mi>n</mi></msup><mo>−</mo><mn>4</mn><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>ρ</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>∘</mo><msubsup><mi>X</mi><mn>1</mn><mi>n</mi></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><msup><mi>γ</mi><mi>n</mi></msup><mo>+</mo><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>ρ</mi><mrow><mi>n</mi><mo>−</mo><mn>2</mn></mrow></msup><mo>∘</mo><msubsup><mover accent="true"><mi>X</mi><mo>~</mo></mover><mn>1</mn><mi>n</mi></msubsup><mo stretchy="true" form="postfix">)</mo></mrow><msup><mover accent="true"><mi>γ</mi><mo>~</mo></mover><mi>n</mi></msup><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="2.0em"></mspace><mi>n</mi><mo>≥</mo><mn>2</mn><mi>.</mi></mrow></semantics></math></div>
+              <p class="source-note large-source">Rui &amp; Tabata (2010): first-order mass-preserving LG. Futai et al. (2022): second-order mass-preserving LG.</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+
+      <section class="chapter tone-soft" id="characteristics" data-nav="mesh" data-title="Characteristic transport">
+        <div class="chapter-inner">
+          <header data-slide-step="0" class="chapter-heading">
+            <div><p class="chapter-index">07 · Characteristic transport</p><h2>Characteristic transport and mesh movement</h2></div>
+          </header>
+          <div class="xy-host" lang="en"></div>
+        </div>
+      </section>
+
+
+      <section class="chapter" id="mesh-kinematics" data-nav="mesh" data-title="Moving mesh">
+        <div class="chapter-inner">
+          <header data-slide-step="0" class="chapter-heading compact-heading">
+            <div><p class="chapter-index">06 · Moving mesh method</p><h2>Moving finite-element space</h2></div>
+            <p class="chapter-statement">The nodal law used in LGMM follows the physical flow and adds a mesh-diffusion term; boundary vertices are fixed.</p>
+          </header>
+
+          <article data-slide-step="1" class="formal-panel readable-formal wide-formal">
+            <div class="formal-label">Mesh motion used in LGMM · time-continuous form</div>
+            <p>For t ∈ [0,T], let P<sub>i</sub>(t), i=1,…,N<sub>p</sub>, be the nodal coordinates of the time-dependent mesh 𝒯<sub>h</sub>(t), with P1 basis functions φ<sub>i</sub>(t), i=1,…,N<sub>p</sub>. For interior nodes,</p>
+            <div class="math-display"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mi>d</mi><msub><mi>P</mi><mi>i</mi></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>𝐮</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>P</mi><mi>i</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msub><mi>ν</mi><mi>M</mi></msub><munder><mo>∑</mo><mrow><mi>K</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>∋</mo><msub><mi>P</mi><mi>i</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></munder><msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>∇</mi><msub><mi>φ</mi><mi>i</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mi>K</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>t</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><mo>∀</mo><mi>i</mi><mo>∈</mo><msub><mi>ℐ</mi><mrow><mi mathvariant="normal">i</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">t</mi></mrow></msub><mi>.</mi></mrow></semantics></math></div>
+            <p class="formal-note">The mesh regularization coefficient is ν<sub>M</sub>. Boundary vertices remain fixed: P<sub>i</sub>(t) ≡ P<sub>i</sub>⁰ for i ∈ 𝓘<sub>Γ</sub>.</p>
+          </article>
+
+          <p data-slide-step="1" class="source-note large-source"><a class="source-citation-link" href="https://link.springer.com/article/10.1007/s10915-019-00997-0" target="_blank" rel="noopener noreferrer">Inspired by the mass-transport method of Carrillo, Kolbe &amp; Lukáčová-Medvid’ová (2019).</a></p>
+        </div>
+      </section>
+
+
+      <section class="chapter" id="discrete-mesh" data-nav="mesh" data-title="1D mesh law">
+        <div class="chapter-inner">
+          <header data-slide-step="0" class="chapter-heading">
+            <div><p class="chapter-index">08 · Moving mesh in 1D</p><h2>1D mesh law</h2></div>
+            <p class="chapter-statement">Start from the continuous nodal motion, insert the two adjacent P1 gradients, and then discretize the spacing term semi-implicitly.</p>
+          </header>
+
+          <article data-slide-step="0" class="formal-panel readable-formal wide-formal continuous-law-panel">
+            <div class="formal-label">Continuous 1D form</div>
+            <p>For the interior nodes i=2,…,N<sub>p</sub>−1, the moving-mesh law becomes</p>
+            <div class="math-display medium-math">
+              <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow>
+                <mfrac><mrow><mi>d</mi><msub><mi>P</mi><mi>i</mi></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac>
+                <mo>=</mo><mi>u</mi><mrow><mo>(</mo><msub><mi>P</mi><mi>i</mi></msub><mo>,</mo><mi>t</mi><mo>)</mo></mrow>
+                <mo>+</mo><msub><mi>ν</mi><mi>M</mi></msub><munder><mo>∑</mo><mrow><mi>K</mi><mrow><mo>(</mo><mi>t</mi><mo>)</mo></mrow><mo>∋</mo><msub><mi>P</mi><mi>i</mi></msub></mrow></munder>
+                <msub><mrow><mo>[</mo><mi>∇</mi><msub><mi>φ</mi><mi>i</mi></msub><mo>]</mo></mrow><mi>K</mi></msub><mo>,</mo>
+                <mspace width="1.2em"/><mi>i</mi><mo>=</mo><mn>2</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>N</mi><mi>p</mi></msub><mo>−</mo><mn>1</mn><mi>.</mi>
+              </mrow></semantics></math>
+            </div>
+            <div class="math-display compact-math">
+              <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow>
+                <mfrac><mrow><mi>d</mi><msub><mi>P</mi><mi>i</mi></msub></mrow><mrow><mi>d</mi><mi>t</mi></mrow></mfrac>
+                <mo>=</mo><mi>u</mi><mrow><mo>(</mo><msub><mi>P</mi><mi>i</mi></msub><mo>,</mo><mi>t</mi><mo>)</mo></mrow>
+                <mo>+</mo><msub><mi>ν</mi><mi>M</mi></msub><mrow><mo>(</mo><mfrac><mn>1</mn><mrow><msub><mi>P</mi><mi>i</mi></msub><mo>−</mo><msub><mi>P</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow></mfrac><mo>−</mo><mfrac><mn>1</mn><mrow><msub><mi>P</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>P</mi><mi>i</mi></msub></mrow></mfrac><mo>)</mo></mrow><mi>.</mi>
+              </mrow></semantics></math>
+            </div>
+            <p class="formal-note">The boundary nodes remain fixed: P<sub>1</sub>(t)=a and P<sub>N<sub>p</sub></sub>(t)=b.</p>
+          </article>
+
+          <div data-slide-step="1" class="derivation-bridge"><span>continuous node law</span><i>→</i><span>adjacent P1 gradients</span><i>→</i><span>semi-implicit time discretization</span></div>
+
+          <div class="basis-discretization readable-basis">
+            <figure data-slide-step="1" class="basis-figure">
+              <svg viewBox="0 0 760 330" role="img" aria-labelledby="basisTitle basisDesc">
+                <title id="basisTitle">One-dimensional hat basis and its gradients</title>
+                <desc id="basisDesc">A piecewise-linear basis function centered at node i with slopes on the two adjacent elements.</desc>
+                <line class="basis-axis" x1="70" y1="255" x2="700" y2="255"></line>
+                <line class="basis-axis" x1="70" y1="255" x2="70" y2="45"></line>
+                <path class="hat-function" d="M125 255 L370 70 L635 255"></path>
+                <line class="node-guide" x1="125" y1="255" x2="125" y2="276"></line>
+                <line class="node-guide" x1="370" y1="70" x2="370" y2="276"></line>
+                <line class="node-guide" x1="635" y1="255" x2="635" y2="276"></line>
+                <text class="basis-label" x="125" y="304" text-anchor="middle">Pᵢ₋₁</text>
+                <text class="basis-label" x="370" y="304" text-anchor="middle">Pᵢ</text>
+                <text class="basis-label" x="635" y="304" text-anchor="middle">Pᵢ₊₁</text>
+                <text class="basis-label" x="245" y="240" text-anchor="middle">Kᵢ₋₁</text>
+                <text class="basis-label" x="505" y="240" text-anchor="middle">Kᵢ</text>
+                <text class="slope-label" x="220" y="130" text-anchor="middle">+1/(Pᵢ−Pᵢ₋₁)</text>
+                <text class="slope-label" x="530" y="130" text-anchor="middle">−1/(Pᵢ₊₁−Pᵢ)</text>
+                <text class="basis-label" x="50" y="72">ϕᵢ</text>
+              </svg>
+              <figcaption>On each adjacent interval the P1 gradient is constant. Their sum is exactly the spacing correction in the continuous 1D law.</figcaption>
+            </figure>
+            <article data-slide-step="2" class="formal-panel discrete-law readable-formal">
+              <div class="formal-label">Semi-implicit discrete form</div>
+              <div class="math-display">
+                <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow>
+                  <mfrac><mrow><msubsup><mi>P</mi><mi>i</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>−</mo><msubsup><mi>P</mi><mi>i</mi><mi>n</mi></msubsup></mrow><mrow><mi>Δ</mi><mi>t</mi></mrow></mfrac>
+                  <mo>=</mo><msup><mi>u</mi><mi>n</mi></msup><mrow><mo>(</mo><msubsup><mi>P</mi><mi>i</mi><mi>n</mi></msubsup><mo>)</mo></mrow>
+                  <mo>+</mo><msub><mi>ν</mi><mi>M</mi></msub><mfrac><mrow><msubsup><mi>P</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>−</mo><mn>2</mn><msubsup><mi>P</mi><mi>i</mi><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>+</mo><msubsup><mi>P</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup></mrow><mrow><mo>(</mo><msubsup><mi>P</mi><mi>i</mi><mi>n</mi></msubsup><mo>−</mo><msubsup><mi>P</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow><mi>n</mi></msubsup><mo>)</mo><mo>(</mo><msubsup><mi>P</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow><mi>n</mi></msubsup><mo>−</mo><msubsup><mi>P</mi><mi>i</mi><mi>n</mi></msubsup><mo>)</mo></mrow></mfrac><mo>,</mo>
+                  <mspace width="1.2em"/><mi>i</mi><mo>=</mo><mn>2</mn><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>N</mi><mi>p</mi></msub><mo>−</mo><mn>1</mn><mi>.</mi>
+                </mrow></semantics></math>
+              </div>
+              <div class="math-display compact-math">
+                <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>P</mi><mn>1</mn><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>=</mo><mi>a</mi><mo>,</mo><mspace width="1.5em"/><msubsup><mi>P</mi><msub><mi>N</mi><mi>p</mi></msub><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></msubsup><mo>=</mo><mi>b</mi><mo>,</mo><mspace width="1.5em"/><mi>a</mi><mo>=</mo><msubsup><mi>P</mi><mn>1</mn><mn>0</mn></msubsup><mo>&lt;</mo><msubsup><mi>P</mi><mn>2</mn><mn>0</mn></msubsup><mo>&lt;</mo><mi>⋯</mi><mo>&lt;</mo><msubsup><mi>P</mi><msub><mi>N</mi><mi>p</mi></msub><mn>0</mn></msubsup><mo>=</mo><mi>b</mi><mi>.</mi></mrow></semantics></math>
+              </div>
+            </article>
+          </div>
+          <details data-slide-step="2" class="math-detail">
+            <summary><span><b>Adjacent P1 gradients</b> · local origin of the spacing term</span><span class="detail-action"><i>Show</i><i>Hide</i></span></summary>
+            <div class="detail-content derivation-grid two-step">
+              <div><div class="math-display compact-math"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mo>[</mo><mi>∇</mi><msub><mi>φ</mi><mi>i</mi></msub><mo>]</mo></mrow><msub><mi>K</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub></msub><mo>=</mo><mfrac><mn>1</mn><mrow><msub><mi>P</mi><mi>i</mi></msub><mo>−</mo><msub><mi>P</mi><mrow><mi>i</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow></mfrac><mi>.</mi></mrow></semantics></math></div></div>
+              <div><div class="math-display compact-math"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mrow><mo>[</mo><mi>∇</mi><msub><mi>φ</mi><mi>i</mi></msub><mo>]</mo></mrow><msub><mi>K</mi><mi>i</mi></msub></msub><mo>=</mo><mo>−</mo><mfrac><mn>1</mn><mrow><msub><mi>P</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>−</mo><msub><mi>P</mi><mi>i</mi></msub></mrow></mfrac><mi>.</mi></mrow></semantics></math></div></div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="chapter tone-ink" id="results-map" data-nav="results" data-title="Main results">
+        <div class="chapter-inner">
+          <header class="chapter-heading">
+            <div><p class="chapter-index on-dark">09 · Analysis</p><h2>Main results</h2></div>
+          </header>
+          <div class="result-roadmap large-roadmap">
+            <a href="#geometry-theorem" data-technical-group="results" data-technical-topic="geometry-theorem" aria-haspopup="dialog" aria-controls="technical-results"><h3>Mesh validity</h3><p>Non-overlap and non-inversion</p></a>
+            <a href="#mass-stability" data-technical-group="results" data-technical-topic="mass-stability" aria-haspopup="dialog" aria-controls="technical-results"><h3>Mass conservation</h3><p>Exact discrete balance</p></a>
+            <a href="#stability" data-technical-group="results" data-technical-topic="stability" aria-haspopup="dialog" aria-controls="technical-results"><h3>Stability</h3><p>Energy estimate</p></a>
+            <a href="#error-1d" data-technical-group="results" data-technical-topic="error-1d" aria-haspopup="dialog" aria-controls="technical-results"><h3>Error estimates</h3><p>Time and space convergence</p></a>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter tone-soft" id="experiment" data-nav="numerics" data-title="Numerical experiment">
+        <div class="chapter-inner">
+          <header class="chapter-heading">
+            <div>
+              <p class="chapter-index">17 · Numerical experiment</p>
+              <h2>1D test problem</h2>
+            </div>
+            <p class="chapter-statement">A convection-dominated example separates the effect of fixed and moving spatial resolution.</p>
+            <p class="chapter-lead">
+              Both computations use the same conservative LG temporal core and the same
+              initial number of P1 degrees of freedom.
+            </p>
+          </header>
+
+          <div class="experiment-v11-layout">
+            <div class="experiment-grid">
+              <article class="formal-panel test-problem">
+              <div class="formal-label">Problem data</div>
+              <div class="display-equation">
+                ∂<sub>t</sub>φ + ∂<sub>x</sub>(uφ) − ν∂<sub>xx</sub>φ = 0
+                &nbsp; in Ω = (−1,1)
+              </div>
+              <dl class="settings-list">
+                <div><dt>velocity</dt><dd>u(x,t) = sin(2πx)</dd></div>
+                <div><dt>diffusion</dt><dd>ν = 10<sup>−5</sup></dd></div>
+                <div><dt>initial data</dt><dd>φ⁰(x) = exp[−(1−cos x)/0.01]</dd></div>
+                <div><dt>time interval</dt><dd>T = 2</dd></div>
+              </dl>
+              </article>
+
+              <article class="formal-panel discretization-settings">
+              <div class="formal-label">Discretization</div>
+              <div class="setting-matrix">
+                <div><span>initial mesh</span><strong>uniform</strong></div>
+                <div><span>h</span><strong>2 / 256</strong></div>
+                <div><span>Δt</span><strong>10<sup>−4</sup></strong></div>
+                <div><span>elements</span><strong>256</strong></div>
+              </div>
+              <div class="peclet-calculation">
+                <span>maximum initial element Péclet number</span>
+                <strong>Pe<sub>h</sub> ≈ h /(2ν) ≈ 3.91 × 10²</strong>
+              </div>
+                <p>The test is strongly convection-dominated from the initial uniform mesh.</p>
+              </article>
+            </div>
+
+            <figure class="initial-data-figure panel-focusable-static">
+              <div class="initial-data-head"><span>Initial state · t = 0</span><strong>Localized profile on a uniform mesh</strong></div>
+              <img src="assets/initial-data-uniform-mesh.png" alt="Initial numerical density profile centered at zero above the uniform initial element sizes" />
+              <figcaption>The initial density is localized near x=0, while every element begins with the same size. The subsequent comparison therefore starts from identical spatial degrees of freedom.</figcaption>
+            </figure>
+          </div>
+
+          <div class="comparison-protocol">
+            <span>Controlled comparison</span>
+            <div><b>fixed LG</b><small>uniform nodes remain fixed</small></div>
+            <div><b>LGMM</b><small>the same nodes evolve by the mesh law</small></div>
+            <strong>Only the spatial placement changes.</strong>
+          </div>
+
+          <details class="math-detail">
+            <summary>
+              <span><b>Show expected dynamics</b> · why peaks form near ±0.5</span>
+              <span class="detail-action"><i>Show</i><i>Hide</i></span>
+            </summary>
+            <div class="detail-content prose-detail">
+              <p>
+                The velocity u(x)=sin(2πx) points away from x=0 toward the stable locations
+                x=±0.5 on the two half-intervals. Conservative transport concentrates the
+                initially central profile there, while ν=10<sup>−5</sup> supplies only weak
+                smoothing. The computation therefore creates narrow, moving concentration
+                peaks that stress uniform spatial resolution.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="chapter tone-ink evidence-section" id="evidence" data-nav="numerics" data-title="Fixed versus moving mesh">
+        <div class="chapter-inner">
+          <header class="chapter-heading compact-heading">
+            <div>
+              <p class="chapter-index on-dark">18 · Numerical evidence</p>
+              <h2>Fixed vs moving mesh</h2>
+            </div>
+            <p class="chapter-statement on-dark">At the same nominal spatial dimension, changing node placement changes the resolved solution in this experiment.</p>
+            <p class="chapter-lead on-dark">
+              Scrub or play the two uploaded computations in synchrony.
+            </p>
+          </header>
+
+          <div class="comparison-stage">
+            <figure class="comparison-card fixed-card">
+              <header><span>Fixed-mesh conservative LG</span><strong>uniform h</strong></header>
+              <video
+                id="fixedVideo"
+                muted
+                loop
+                playsinline
+                preload="auto"
+                poster="assets/fixed-mesh-1d-poster.jpg"
+                aria-label="Fixed-mesh solution developing oscillatory traces near sharp peaks"
+              >
+                <source src="assets/fixed-mesh-1d.mp4" type="video/mp4" />
+              </video>
+              <figcaption>Under-resolved narrow peaks are accompanied by nonphysical oscillatory traces.</figcaption>
+            </figure>
+
+            <figure class="comparison-card moving-card">
+              <header><span>Conservative LGMM</span><strong>moving h<sub>i</sub></strong></header>
+              <video
+                id="movingVideo"
+                muted
+                loop
+                playsinline
+                preload="auto"
+                poster="assets/moving-mesh-1d-poster.jpg"
+                aria-label="Moving-mesh solution resolving narrow peaks while mesh intervals concentrate"
+              >
+                <source src="assets/moving-mesh-1d.mp4" type="video/mp4" />
+              </video>
+              <figcaption>The moving nodes concentrate around the two peaks and resolve their profiles cleanly.</figcaption>
+            </figure>
+          </div>
+
+          <div class="comparison-controls">
+            <button id="comparisonPlay" type="button">
+              <span class="play-glyph" aria-hidden="true"></span><span>Play together</span>
+            </button>
+            <button id="comparisonRestart" type="button">Restart</button>
+            <label>
+              <span class="sr-only">Simulation time</span>
+              <input id="comparisonScrubber" type="range" min="0" max="1000" value="0" />
+            </label>
+            <output id="comparisonTime">t ≈ 0.00</output>
+          </div>
+
+          <div class="evidence-conclusions">
+            <div>
+              <span>Numerical observation</span>
+              <p>Moving spatial resolution suppresses the oscillations seen in this fixed-mesh run.</p>
+            </div>
+            <div>
+              <span>Claim boundary</span>
+              <p>This comparison motivates LGMM; it is not a universal efficiency theorem against AMR or stabilized methods.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="chapter" id="beyond-aggregation" data-nav="numerics" data-title="Additional numerical examples">
+        <div class="chapter-inner">
+          <header class="chapter-heading"><div><p class="chapter-index">19 · Additional simulations</p><h2>Beyond aggregation</h2></div><p class="chapter-statement">Moving resolution also reacts to steep transitions that are not created by aggregation, while multidimensional motion exposes a separate mesh-quality problem.</p></header>
+          <div class="phenomenon-actions">
+            <div class="phenomenon-tabs" role="tablist" aria-label="Additional simulation examples">
+              <button type="button" class="active" data-phenomenon="corners">Sharp transitions</button>
+              <button type="button" data-phenomenon="quality">2D mesh quality</button>
+            </div>
+            <button type="button" id="multi-d-analysis" class="analysis-tile" data-technical-group="analysis" data-technical-topic="error-equation" aria-haspopup="dialog" aria-controls="technical-analysis"><strong>Multi-D Error Analysis</strong></button>
+          </div>
+          <div class="phenomenon-panel active" data-phenomenon-panel="corners">
+            <div class="additional-sim-grid">
+              <figure class="large-sim"><img src="assets/sharp-corners-full.gif" alt="Step-like profile with mesh sizes concentrating near the two steep transitions" /><figcaption><strong>Full domain.</strong> The mesh becomes smallest near the two sharp transitions, even though this example is not an aggregation peak.</figcaption></figure>
+              <figure class="large-sim"><img src="assets/sharp-corners-zoom.gif" alt="Zoom near a steep transition with local mesh sizes concentrating at the corner" /><figcaption><strong>Zoom near the transition.</strong> Resolution follows large spatial change rather than total mass concentration alone.</figcaption></figure>
+            </div>
+            <div class="numerical-takeaway"><span>Point of this example</span><p>LGMM is motivated by moving localized structure more broadly: narrow peaks are one case; steep fronts / corners are another resolution challenge.</p></div>
+          </div>
+          <div class="phenomenon-panel" data-phenomenon-panel="quality" id="boundary-quality">
+            <div class="quality-layout">
+              <figure class="quality-video-wrap"><video id="qualityVideo" muted loop playsinline controls preload="metadata" poster="assets/moving-mesh-2d-poster.jpg"><source src="assets/moving-mesh-2d.mp4" type="video/mp4" /></video></figure>
+              <aside class="quality-analysis"><span class="section-kicker">Multi-D issue</span><h3>Boundary elements can become strongly skewed</h3><p>The mesh may remain non-overlapping and non-inverted while boundary-adjacent simplices deteriorate in aspect ratio. This is exactly why <button class="term-link" type="button" data-term="shape-regularity">shape regularity</button> is stronger than the non-overlap proposition.</p><button type="button" class="primary-action" id="qualityFrameButton">Inspect a boundary-quality frame</button><p class="small-claim">This numerical frame illustrates the issue; it is not itself a theorem on shape regularity.</p></aside>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="chapter closing tone-dark" id="outlook" data-nav="outlook" data-title="Research direction">
+        <div class="chapter-inner" id="future-directions-content"></div>
+      </section>
+    </main>
+
+
+    <aside class="concept-popover" id="conceptPopover" role="dialog" aria-live="polite" hidden>
+      <div class="concept-popover-head"><strong id="conceptTitle">Definition</strong><button type="button" id="conceptClose" aria-label="Close definition">×</button></div>
+      <div id="conceptBody"></div>
+      <a id="conceptJump" href="#question">Revisit definition ↗</a>
+    </aside>
+    <aside class="presenter-controls" aria-label="Presentation navigation and text zoom">
+      <div class="presenter-zoom" role="group" aria-label="Adjust presentation text size">
+        <button id="zoomOut" type="button" aria-label="Zoom presentation text out" title="Smaller text">A−</button>
+        <button id="zoomReset" type="button" aria-label="Reset presentation text zoom" title="Reset text size"><span id="zoomLevel">100%</span></button>
+        <button id="zoomIn" type="button" aria-label="Zoom presentation text in" title="Larger text">A+</button>
+      </div>
+      <div class="presenter-section-nav" role="group" aria-label="Move between presentation sections">
+        <button id="prevSection" type="button" aria-label="Previous section">
+          <svg aria-hidden="true" viewBox="0 0 20 20"><path d="m12.5 4-6 6 6 6"></path></svg>
+        </button>
+        <button id="sectionCounter" type="button" aria-haspopup="dialog" aria-controls="overviewDialog" aria-label="Sections, slide 1 of 13"><span id="sectionNumber">01 / 13</span><span class="slide-build-status" id="slideBuildStatus" aria-hidden="true"></span></button>
+        <button id="nextSection" type="button" aria-label="Next section">
+          <svg aria-hidden="true" viewBox="0 0 20 20"><path d="m7.5 4 6 6-6 6"></path></svg>
+        </button>
+      </div>
+    </aside>
+
+    <aside class="equation-recall-popover" id="meshEquationRecall" popover="auto" aria-labelledby="meshEquationTitle">
+      <header>
+        <h3 id="meshEquationTitle">LGMM nodal motion · Section 6</h3>
+        <button type="button" popovertarget="meshEquationRecall" popovertargetaction="hide" aria-label="Close mesh motion recall">×</button>
+      </header>
+      <div class="equation-recall-math"></div>
+      <p>One choice of mesh motion uses physical transport plus mesh regularization. For this choice, the discrete mesh velocity represents the resulting nodal motion.</p>
+    </aside>
+
+    <dialog class="lg-characteristic-dialog" id="lgCharacteristicDialog" aria-labelledby="lgCharacteristicTitle">
+      <header class="lg-characteristic-header">
+        <h2 id="lgCharacteristicTitle">Characteristic backtracking</h2>
+        <form method="dialog"><button type="submit" autofocus>Close</button></form>
+      </header>
+      <div class="lg-characteristic-body">
+        <figure class="lg-characteristic-figure">
+          <figcaption>Illustrative pure transport at constant velocity</figcaption>
+          <svg viewBox="0 0 420 286" role="img" aria-labelledby="lgCharacteristicFigureTitle lgCharacteristicFigureDesc">
+            <title id="lgCharacteristicFigureTitle">A sharp profile translated by the flow</title>
+            <desc id="lgCharacteristicFigureDesc">Both profiles have the same shape and height. At the selected position x the previous value is zero and the current value is the peak. Tracing back along the characteristic reaches the previous peak at X₁ⁿ(x), where the value equals the current one.</desc>
+            <defs>
+              <path id="lgTransportPeak" d="M108 252H120C138 252 139 187 157 187S176 252 194 252H206Z"/>
+              <marker id="lgBackwardArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                <path d="M0 0L10 5L0 10Z" class="lg-characteristic-arrow"/>
+              </marker>
+            </defs>
+            <path class="lg-characteristic-levels" d="M55 116H402 M55 252H402"/>
+            <use class="lg-previous-profile" href="#lgTransportPeak"/>
+            <use class="lg-current-profile" href="#lgTransportPeak" transform="translate(139 -136)"/>
+            <path class="lg-fixed-path" d="M296 51V252"/>
+            <path class="lg-backtrack-path" d="M296 51L157 187" marker-end="url(#lgBackwardArrow)"/>
+            <circle class="lg-arrival" cx="296" cy="51" r="5.5"/>
+            <circle class="lg-departure" cx="157" cy="187" r="5.5"/>
+            <circle class="lg-fixed-departure" cx="296" cy="252" r="5"/>
+            <text x="8" y="122">tⁿ</text><text x="8" y="258">tⁿ⁻¹</text>
+            <text x="308" y="36">φⁿ(x)</text>
+            <text x="145" y="172" text-anchor="end">φⁿ⁻¹(X₁ⁿ(x))</text>
+            <text x="307" y="239">φⁿ⁻¹(x)</text>
+            <text x="157" y="277" text-anchor="middle">X₁ⁿ(x)</text>
+            <text x="296" y="277" text-anchor="middle">x</text>
+          </svg>
+          <div class="lg-characteristic-key" aria-hidden="true">
+            <span>Fixed position · different values</span>
+            <span>Along the flow · same value</span>
+          </div>
+          <div class="lg-recall-equation">
+            <math display="block"><mrow>
+              <msubsup><mi>X</mi><mn>1</mn><mi>n</mi></msubsup><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo>
+              <mi>x</mi><mo>−</mo><mi mathvariant="normal">Δ</mi><mi>t</mi><msup><mi>𝐮</mi><mi>n</mi></msup><mo>(</mo><mi>x</mi><mo>)</mo>
+            </mrow></math>
+          </div>
+        </figure>
+        <div class="lg-characteristic-explanation">
+          <p class="lg-transport-scope">
+            <button class="equation-recall-link" type="button" popovertarget="materialEquationRecall">The material derivative</button>
+          </p>
+          <aside class="equation-recall-popover" id="materialEquationRecall" popover="auto" aria-labelledby="materialEquationTitle">
+            <header>
+              <h3 id="materialEquationTitle">Conservative convection–diffusion</h3>
+              <button type="button" popovertarget="materialEquationRecall" popovertargetaction="hide" aria-label="Close equation recall">×</button>
+            </header>
+            <div class="equation-recall-math"></div>
+            <p>Expand the divergence term to recover <span class="lg-inline-math">Dφ/Dt = ∂<sub>t</sub>φ + 𝐮·∇φ</span>. The remaining terms are <span class="lg-inline-math">φ∇·𝐮</span> from local volume change and <span class="lg-inline-math">−νΔφ</span> from diffusion.</p>
+          </aside>
+          <div class="lg-recall-equation">
+            <math display="block"><mrow>
+              <mfrac><mrow><mi>D</mi><mi>φ</mi></mrow><mrow><mi>D</mi><mi>t</mi></mrow></mfrac><mo>=</mo>
+              <mfrac><mrow><mo>∂</mo><mi>φ</mi></mrow><mrow><mo>∂</mo><mi>t</mi></mrow></mfrac><mo>+</mo><mi>𝐮</mi><mo>⋅</mo><mo>∇</mo><mi>φ</mi>
+            </mrow></math>
+            <math display="block"><mrow>
+              <mfrac><mrow><mi>D</mi><mi>φ</mi></mrow><mrow><mi>D</mi><mi>t</mi></mrow></mfrac>
+              <mo>(</mo><mi>x</mi><mo>,</mo><msup><mi>t</mi><mi>n</mi></msup><mo>)</mo><mo>≈</mo>
+              <mfrac>
+                <mrow><msup><mi>φ</mi><mi>n</mi></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>−</mo>
+                  <msup><mi>φ</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>(</mo>
+                  <msubsup><mi>X</mi><mn>1</mn><mi>n</mi></msubsup><mo>(</mo><mi>x</mi><mo>)</mo><mo>)</mo></mrow>
+                <mrow><mi mathvariant="normal">Δ</mi><mi>t</mi></mrow>
+              </mfrac>
+            </mrow></math>
+          </div>
+          <p>As the steep flank passes a fixed point, the time and convection terms can both be large. They cancel in this pure-transport example, giving <span class="lg-inline-math"><i>Dφ</i>/<i>Dt</i> = 0</span>. LG approximates their sum with one difference along the flow.</p>
+          <div class="lg-recall-equation lg-recall-conservative">
+            <p>Conservative pure transport · general velocity</p>
+            <math display="block"><mrow>
+              <msup><mi>φ</mi><mi>n</mi></msup><mo>(</mo><mi>x</mi><mo>)</mo><mo>≈</mo>
+              <mo>(</mo><msup><mi>φ</mi><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></msup><mo>∘</mo>
+              <msubsup><mi>X</mi><mn>1</mn><mi>n</mi></msubsup><mo>)</mo><mo>(</mo><mi>x</mi><mo>)</mo>
+              <mspace width=".16em"/><msup><mi>γ</mi><mi>n</mi></msup><mo>(</mo><mi>x</mi><mo>)</mo>
+            </mrow></math>
+          </div>
+          <p>The Jacobian γ<sup>n</sup> accounts for local volume changes and preserves mass under the change of variables in the density update.</p>
+        </div>
+        <p class="lg-characteristic-takeaway"><strong>When convection dominates,</strong> the characteristic update handles transport along the flow. The moving mesh concentrates spatial resolution where the evolving profile needs it.</p>
+      </div>
+    </dialog>
+
+    <dialog class="overview-dialog" id="overviewDialog" aria-labelledby="overviewTitle">
+      <div class="dialog-header">
+        <div><span>15-minute route</span><h2 id="overviewTitle">Research roadmap</h2></div>
+        <button id="overviewClose" type="button" aria-label="Close section overview">×</button>
+      </div>
+      <div class="overview-grid">
+        <a href="#question"><span>01</span><strong>Question</strong><small>research identity</small></a>
+        <a href="#motivation"><span>02</span><strong>Motivation</strong><small>moving localization</small></a>
+        <a href="#challenge"><span>03</span><strong>Challenge</strong><small>resolution</small></a>
+        <a href="#model"><span>04</span><strong>Model</strong><small>conservative PDE</small></a>
+        <a href="#conservative-lg"><span>05</span><strong>LG scheme</strong><small>mass-preserving</small></a>
+        <a href="#mesh-kinematics"><span>06</span><strong>Moving mesh</strong><small>nodal law</small></a>
+        <a href="#characteristics"><span>07</span><strong>Characteristic</strong><small>transport + mesh</small></a>
+        <a href="#discrete-mesh"><span>08</span><strong>1D mesh law</strong><small>semi-implicit</small></a>
+        <a href="#results-map"><span>09</span><strong>Main results</strong><small>Four statements</small></a>
+        <a href="#experiment"><span>10</span><strong>1D test</strong><small>settings</small></a>
+        <a href="#evidence"><span>11</span><strong>Fixed vs moving</strong><small>aggregation</small></a>
+        <a href="#beyond-aggregation"><span>12</span><strong>Beyond aggregation</strong><small>corners · 2D quality</small></a>
+        <a href="#outlook"><span>13</span><strong>Future directions</strong><small>geometry and applications</small></a>
+      </div>
+      <div class="v13-overview-footer">
+        <a href="#multi-d-analysis" class="analysis-tile" data-technical-group="analysis" data-technical-topic="error-equation" aria-haspopup="dialog" aria-controls="technical-analysis"><strong>Multi-D Error Analysis</strong></a>
+        <label for="supplementLanguage">Supplement language
+          <select id="supplementLanguage"><option value="en">English</option><option value="ja">日本語</option></select>
+        </label>
+      </div>
+    </dialog>
+
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

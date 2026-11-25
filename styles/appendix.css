@@ -1,0 +1,57 @@
+.technical-dialog{
+  width:min(94vw,1360px);height:min(88dvh,940px);max-width:none;max-height:none;
+  margin:auto;border:1px solid #9cbac3;border-radius:15px;padding:0;
+  overflow:hidden;background:#f8fbfc;color:#102d3a;box-shadow:0 26px 90px #051a2ac0;
+}
+.technical-dialog::backdrop{background:#061d2ad1}
+.technical-shell{display:grid;grid-template-rows:auto auto minmax(0,1fr);height:100%}
+.technical-header{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:.87rem clamp(.9rem,2vw,1.6rem);background:linear-gradient(120deg,#082735,#114658);color:#f3fbfe}
+.technical-header h2{font:500 clamp(22px,3.2vw,36px)/1.2 var(--font-display);color:inherit}
+.technical-header p{font:400 .9rem/1.35 var(--font-body);color:#b9dbe5;margin-top:.2rem}
+.technical-header button{flex:none;padding:.5rem .75rem;border:1px solid #82a8b2;border-radius:6px;background:#fcfeff09;color:#fff;font-size:.92rem}
+.technical-header button:hover{background:#ffffff24}
+.technical-tabs{display:flex;overflow:auto;gap:.3rem;align-items:stretch;padding:.5rem .7rem;background:#eaf3f6;border-bottom:1px solid #c4d9e0;scrollbar-width:thin}
+.technical-tabs button{border:1px solid transparent;border-radius:6px;flex:1 0 auto;padding:.57rem .67rem;font:600 .94rem/1.3 var(--font-navigation);color:#25515f;min-height:42px}
+.technical-tabs button span{color:#567483;font-weight:400;margin-right:.22rem}
+.technical-tabs button[aria-selected=true]{background:#fff;border-color:#99b9c2;border-bottom:3px solid var(--workshop-teal);color:#102d3a}
+.technical-scroll{overflow:auto;overscroll-behavior:contain}
+.technical-panel{padding:clamp(.75rem,2.1vw,1.7rem);min-width:0}
+.technical-context{display:flex;align-items:baseline;gap:.6rem 1rem;flex-wrap:wrap;background:#edf5f5;border-left:3px solid var(--workshop-teal);padding:.7rem .86rem;margin:0 0 .9rem}
+.technical-context p{font:400 1rem/1.45 var(--font-body);max-width:108ch;color:#264f59}
+.technical-context a{font-size:.93rem}
+.technical-source{color:#4e6876;font:500 .9rem/1.4 var(--font-body);margin:.35rem 0}
+.technical-v13{--presentation-scale:1;--line:#cadde2;--blue:#196b86;--teal:#0e7575;--soft:#ecf4f6;--paper:#fbfefe;--white:#fff;--ink:#102d3a;--muted:#446270;width:100%;min-height:0}
+.technical-v13 .chapter{
+  position:relative;display:block;min-height:0;height:auto;max-height:none;overflow:visible;
+  border:1px solid #c7dce4;border-radius:10px;padding:clamp(.8rem,2vw,1.55rem);background:#fff;
+}
+.technical-v13 .chapter.tone-soft{background:#f0f6f8}
+.technical-v13 .chapter-inner{display:flex;flex-direction:column;gap:1rem;min-height:0;height:auto;max-width:none;margin:0;padding:0}
+.technical-v13 .chapter-heading{display:block;margin:0 0 .4rem}
+.technical-v13 .chapter-heading h2{font:500 clamp(27px,3vw,42px)/1.12 var(--font-display);color:#123447;margin:.2rem 0 .55rem}
+.technical-v13 .chapter-index{color:#23657b;font:650 .9rem/1.35 var(--font-navigation)}
+.technical-v13 .chapter-statement{font:500 1.1rem/1.45 var(--font-body);color:#244a5d;margin:0;max-width:100ch}
+.technical-v13 :is(.math-display,.formula-display,.popup-math){max-width:100%;overflow-x:auto;padding-block:.3rem;scrollbar-width:thin}
+.technical-v13 math{font-size:clamp(16px,1.6vw,23px)}
+.technical-v13 :is(.theorem-body,.detail-content,.residual-cards,.r2-term-grid,.extension-grid,.logic-chain,.mapping-visual-panel,.material-bridge-panel,.analysis-target-flow){min-width:0}
+.technical-v13 :is(.r2-term,.residual-cards article,.extension-card,.formal-panel,.theorem-box){min-width:0}
+.technical-v13 .formal-note{color:#375466}
+.technical-v13 .theorem-body li{margin:.28rem 0}
+.technical-v13 details summary{cursor:pointer}
+.technical-v13 .term-link:hover{background:#e2f2f4}
+.technical-v13 [hidden],.technical-term[hidden]{display:none!important}
+.technical-term{
+  position:absolute;right:clamp(.6rem,2vw,1.5rem);z-index:2;
+  width:min(calc(100% - 1.2rem),385px);max-height:60%;overflow:auto;
+  padding:.8rem .94rem;border:1px solid #6598a7;border-radius:9px;background:#fff;box-shadow:0 8px 32px #0a24394d;
+  font:400 .95rem/1.45 var(--font-body);
+}
+.technical-term-head{display:flex;align-items:center;justify-content:space-between;color:#2e6577;font-size:.85rem}
+.technical-term h3{font-size:1.135rem;margin:.4rem 0}
+.technical-term button{padding:.33rem .55rem;border:1px solid #b3cdd5;border-radius:5px}
+.technical-term [data-appendix-related]{margin-top:.55rem}
+.technical-term .popup-math{overflow-x:auto;background:#f0f7f9;padding:.35rem;margin:.4rem 0}
+
+@media(max-width:900px){
+ .technical-v13 :is(.r2-term-grid,.projection-layout-clean,.paired-theorems,.residual-cards,.extension-grid,.mapping-comparison-grid){grid-template-columns:minmax(0,1fr)}
+}
